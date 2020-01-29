@@ -9,6 +9,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Parse Apache logs into TSV files')
     parser.add_argument('file', help='File to parse', nargs='+')
     parser.add_argument('tsv', help='TSV file to write to')
+    parser.add_argument('format', help='Apache log format string')
     return parser.parse_args()
 
 def read_file(path):
@@ -24,8 +25,8 @@ def read_file(path):
 
     return data
 
-def parse_data(data):
-    line_parser = apache_log_parser.make_parser("%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"")
+def parse_data(data, log_format):
+    line_parser = apache_log_parser.make_parser(log_format)
     parsed_data = []
     for line in data:
         try:
@@ -50,10 +51,11 @@ def write_tsv(data, headers, output_file):
 def main():
     args = parse_args()
     output = open(args.tsv, 'w')
+    log_format = args.format
 
     for log in args.file:
         data = read_file(log)
-        parsed = parse_data(data)
+        parsed = parse_data(data, log_format)
         headers = [*parsed[0].keys()]
         write_tsv(parsed, headers, output)
 
